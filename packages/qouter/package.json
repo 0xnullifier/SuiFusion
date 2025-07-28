@@ -1,0 +1,22 @@
+{
+  "name": "qouter",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -b",
+    "start": "tsc -b && node dist/index.js"
+  },
+  "dependencies": {
+    "@1inch/cross-chain-sdk": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "express": "^5.1.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@1inch/cross-chain-sdk": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/express": "^5.0.3"
+  }
+}
