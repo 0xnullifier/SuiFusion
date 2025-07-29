@@ -1,0 +1,24 @@
+{
+  "name": "relayer",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@1inch/cross-chain-sdk": "workspace:*",
+    "@mysten/bcs": "^1.6.4",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "express": "^5.1.0",
+    "type-fest": "4.41.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/express": "^5.0.3",
+    "@types/ws": "^8.5.12"
+  }
+}
