@@ -1,0 +1,21 @@
+{
+  "name": "testing-endpoints",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc index.ts --outDir dist",
+    "start": "node --env-file=.env dist/index.js"
+  },
+  "dependencies": {
+    "@1inch/cross-chain-sdk": "workspace:*",
+    "@mysten/sui": "^1.37.1",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "ethers": "6.13.1"
+  },
+  "devDependencies": {
+    "@1inch/cross-chain-sdk": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*"
+  }
+}
