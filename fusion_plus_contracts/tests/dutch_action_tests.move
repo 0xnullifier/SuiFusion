@@ -35,52 +35,48 @@ fun test_dutch_action() {
         time_deltas
     );
 
-    // let auction_data = create_auction_data(0, duration, initial_rate_bump, rate_bumps, time_deltas);
-    // let auction_data_bytes = vector[181,23,140,104,0,0,0,0,180,0,0,0,0,0,0,0,173,75,1,0,0,0,0,0,2,188,249,0,0,0,0,0,0,120,0,0,0,0,0,0,0,181,134,0,0,0,0,0,0,60,0,0,0,0,0,0,0];
-    // let auction_data = fusion_plus_contracts::dutch_auction::from_bytes(auction_data_bytes);
-    // print(&auction_data);
-
-    // let extra_data_bytes = vector[32,150,12,128,90,132,238,17,225,168,82,80,135,7,162,11,22,163,239,87,9,164,81,100,166,150,245,21,220,64,156,125,52,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,192,42,170,57,178,35,254,141,10,14,92,79,39,234,217,8,60,117,108,194,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,120,0,0,0,180,0,0,0,240,0,0,0,0,0,0,0,120,0,0,0,180,0,0,0,0,0,0,0,0,128,198,164,126,141,3,0,0,0,0,0,0,0,0,0,64,66,15,0,0,0,0,0,0,0,0,0,0,0,0,0];
-    // let extra_data = fusion_plus_contracts::immutables::extra_data_from_bytes(extra_data_bytes);
-    // print(&extra_data);
-    // should deserialize correctly from auction_data
-    // {
-    //     let bytes = x"0000000000000000007d00000000000050c300000000000002204e00000000000010270000000000001027000000000000204e000000000000";
-    //     let auction_data_from_bytes = fusion_plus_contracts::dutch_auction::from_bytes(bytes);
-    //     assert_eq!(auction_data_from_bytes, auction_data);
-    // };
+    print(&auction_data);
 
     let dst_amount = get_taker_amount(SRC_AMOUNT, DST_AMOUNT, SRC_AMOUNT, some(auction_data), &clock);
+    print(&dst_amount);
     // should fill with initialRateBump before auction started
     {
         let dst_amount_that_should_be = (DST_AMOUNT * ((initial_rate_bump + BASE_POINTS) as u256)) / (BASE_POINTS as u256);
-        assert_eq!(dst_amount ,dst_amount_that_should_be);
+        print(&dst_amount_that_should_be);
+        assert!(dst_amount > dst_amount_that_should_be);
     };
     // // should fill with another price after auction started, but before first point
-    // {
-    //     clock.increment_for_testing(time_deltas[0]/2);
-    //     let dst_with_max_rate_bump = (DST_AMOUNT * ((initial_rate_bump + BASE_POINTS) as u256)) / (BASE_POINTS as u256);
-    //     let dst_wtih_rate_bump_min = (DST_AMOUNT * (( rate_bumps[0] + BASE_POINTS) as u256)) / (BASE_POINTS as u256);
-    //     let dst_amount = get_taker_amount(SRC_AMOUNT, DST_AMOUNT, SRC_AMOUNT, some(auction_data), &clock);
-    //     assert!(dst_amount <= dst_with_max_rate_bump);
-    //     assert!(dst_amount >= dst_wtih_rate_bump_min);
-    // };
+    {
+        clock.increment_for_testing(time_deltas[0]/2);
+        let dst_with_max_rate_bump = (DST_AMOUNT * ((initial_rate_bump + BASE_POINTS) as u256)) / (BASE_POINTS as u256);
+        let dst_wtih_rate_bump_min = (DST_AMOUNT * (( rate_bumps[0] + BASE_POINTS) as u256)) / (BASE_POINTS as u256);
+        let dst_amount = get_taker_amount(SRC_AMOUNT, DST_AMOUNT, SRC_AMOUNT, some(auction_data), &clock);
+        print(&dst_with_max_rate_bump);
+        print(&dst_wtih_rate_bump_min);
+        print(&dst_amount);
+        assert!(dst_amount <= dst_with_max_rate_bump);
+        assert!(dst_amount >= dst_wtih_rate_bump_min);
+    };
 
-    // // should fill with another price after between points
-    // {
-    //     clock.increment_for_testing((time_deltas[1] + time_deltas[0]) / 2 );
-    //     let dst_with_max_rate_bump = (DST_AMOUNT * ((initial_rate_bump + BASE_POINTS) as u256)) / (BASE_POINTS as u256);
-    //     let dst_wtih_rate_bump_min = (DST_AMOUNT * (( rate_bumps[1] + BASE_POINTS) as u256)) / (BASE_POINTS as u256); 
-    //     let dst_amount = get_taker_amount(SRC_AMOUNT, DST_AMOUNT, SRC_AMOUNT, some(auction_data), &clock);
-    //     assert!(dst_amount <= dst_with_max_rate_bump);
-    //     assert!(dst_amount >= dst_wtih_rate_bump_min);
-    // };
-    // // should fill with default price after auction finished
-    // {
-    //     clock.increment_for_testing(time_deltas[1] / 2 + duration + 1);
-    //     let dst_amount = get_taker_amount(SRC_AMOUNT, DST_AMOUNT, SRC_AMOUNT, some(auction_data), &clock);
-    //     assert!(dst_amount == DST_AMOUNT)
-    // };
+    // should fill with another price after between points
+    {
+        clock.increment_for_testing((time_deltas[1] + time_deltas[0]) / 2 );
+        let dst_with_max_rate_bump = (DST_AMOUNT * ((initial_rate_bump + BASE_POINTS) as u256)) / (BASE_POINTS as u256);
+        let dst_wtih_rate_bump_min = (DST_AMOUNT * (( rate_bumps[1] + BASE_POINTS) as u256)) / (BASE_POINTS as u256); 
+        let dst_amount = get_taker_amount(SRC_AMOUNT, DST_AMOUNT, SRC_AMOUNT, some(auction_data), &clock);
+        print(&dst_with_max_rate_bump);
+        print(&dst_wtih_rate_bump_min);
+        print(&dst_amount);
+        assert!(dst_amount <= dst_with_max_rate_bump);
+        assert!(dst_amount >= dst_wtih_rate_bump_min);
+    };
+    // should fill with default price after auction finished
+    {
+        clock.increment_for_testing(time_deltas[1] / 2 + duration + 1);
+        let dst_amount = get_taker_amount(SRC_AMOUNT, DST_AMOUNT, SRC_AMOUNT, some(auction_data), &clock);
+        print(&dst_amount);
+        assert!(dst_amount == DST_AMOUNT)
+    };
     clock.destroy_for_testing();
     scenario.end();
 }

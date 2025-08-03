@@ -143,9 +143,8 @@ public fun test_invalid_time_withdraw(){
         let ctx = ctx(&mut scenario);
         let mut clock = clock::create_for_testing(ctx);
         clock.set_for_testing(fill_time_stamp * 1000);
-        let res = withdraw_to(RESOLVER, secret, &mut escrow, &immutables, &clock, ctx);
+        withdraw_to(RESOLVER, secret, &mut escrow, &immutables, &clock, ctx);
         next_tx(&mut scenario, RESOLVER);
-        res.destroy_zero();
         clock.destroy_for_testing();
     };
     return_immutable(immutables);  
@@ -171,9 +170,8 @@ public fun test_invalid_secret_withdraw(){
         let ctx = ctx(&mut scenario);
         let mut clock = clock::create_for_testing(ctx);
         clock.set_for_testing(fill_time_stamp * 1000);
-        let res = withdraw_to(RESOLVER, secret, &mut escrow, &immutables, &clock, ctx);
+        withdraw_to(RESOLVER, secret, &mut escrow, &immutables, &clock, ctx);
         next_tx(&mut scenario, RESOLVER);
-        res.destroy_zero();
         clock.destroy_for_testing();
     };
     return_shared(escrow);
@@ -199,13 +197,12 @@ public fun test_valid_withdraw(){
         let ctx = ctx(&mut scenario);
         let mut clock = clock::create_for_testing(ctx);
         clock.set_for_testing(fill_time_stamp * 1000 + 60 * 1000);
-        let res = withdraw_to(RESOLVER, secret, &mut escrow, &immutables, &clock, ctx);
+        withdraw_to(RESOLVER, secret, &mut escrow, &immutables, &clock, ctx);
         next_tx(&mut scenario, RESOLVER);
 
         let coin = take_from_address<Coin<SrcCoin>>(&scenario, RESOLVER);
         assert!(coin.value() == SRC_AMOUNT as u64);
         return_to_address(RESOLVER, coin);
-        res.destroy_zero();
         clock.destroy_for_testing();
     };
     return_shared(escrow);
@@ -233,13 +230,12 @@ public fun test_invalid_public_withdraw(){
         let ctx = ctx(&mut scenario);
         let mut clock = clock::create_for_testing(ctx);
         clock.set_for_testing(fill_time_stamp * 1000 + 60 * 1000);
-        let res = public_withdraw( secret, &mut escrow, &immutables, &clock, ctx);
+         public_withdraw( secret, &mut escrow, &immutables, &clock, ctx);
         next_tx(&mut scenario, PUBLIC_RESOLVER);
 
         let coin = take_from_address<Coin<SrcCoin>>(&scenario, RESOLVER);
         assert!(coin.value() == SRC_AMOUNT as u64);
         return_to_address(PUBLIC_RESOLVER, coin);
-        res.destroy_zero();
         clock.destroy_for_testing();
     };
     return_shared(escrow);
@@ -267,13 +263,12 @@ public fun test_valid_public_withdraw(){
         let mut clock = clock::create_for_testing(ctx);
         // 120 - 2mins is the start of public withdraw
         clock.set_for_testing(fill_time_stamp * 1000 + 120 * 1000);
-        let res = public_withdraw( secret, &mut escrow, &immutables, &clock, ctx);
+        public_withdraw( secret, &mut escrow, &immutables, &clock, ctx);
         next_tx(&mut scenario, PUBLIC_RESOLVER);
 
         let coin = take_from_address<Coin<SrcCoin>>(&scenario, RESOLVER);
         assert!(coin.value() == SRC_AMOUNT as u64);
         return_to_address(RESOLVER, coin);
-        res.destroy_zero();
         clock.destroy_for_testing();
     };
     return_shared(escrow);
@@ -305,13 +300,12 @@ public fun test_cancel_by_resolver(){
         let mut clock = clock::create_for_testing(ctx);
         // 121 - 1 sec after public withdraw
         clock.set_for_testing(fill_time_stamp * 1000 + 121 * 1000);
-        let res = resolver_cancel(&immutables,&mut escrow,  &clock, ctx);
+        resolver_cancel(&immutables,&mut escrow,  &clock, ctx);
         next_tx(&mut scenario, RESOLVER);
         // coin should have returned back to ALICE i.e the maker
         let coin = take_from_address<Coin<SrcCoin>>(&scenario, ALICE);
         assert!(coin.value() == SRC_AMOUNT as u64);
         return_to_address(ALICE, coin);
-        res.destroy_zero();
         clock.destroy_for_testing();
     };
     return_shared(escrow);
