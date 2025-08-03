@@ -23,7 +23,7 @@ async function main() {
         },
         httpClient
     )
-    const provider = new JsonRpcProvider("https://virtual.mainnet.eu.rpc.tenderly.co/5a73a2c7-48c3-458f-8f85-63456e9791bf");
+    const provider = new JsonRpcProvider("https://virtual.mainnet.eu.rpc.tenderly.co/702101b0-dd4e-4666-b035-a44ec54ea1e9");
     const wallet = new Wallet(process.env.MAKER_PRIVATE_KEY_ETH!, provider)
     const srcChain = NetworkEnum.ETHEREUM;
     const suiClient = new SuiClient({ url: getFullnodeUrl("testnet") })

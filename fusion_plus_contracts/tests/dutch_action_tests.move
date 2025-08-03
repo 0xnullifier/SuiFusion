@@ -9,12 +9,12 @@ use fusion_plus_contracts::fusion_protocol::get_taker_amount;
 use std::option::some;
 use std::debug::print;
 
-const BASE_POINTS: u64 = 100000000;
+const BASE_POINTS: u64 = 10000000;
 
 const ALICE: address = @0xa11ce;
 const RESOLVER: address = @0x1234;
 
-const DST_AMOUNT: u256 = 9747406676438;
+const DST_AMOUNT: u256 = 3000;
 const SRC_AMOUNT: u256 = 100; 
 
 

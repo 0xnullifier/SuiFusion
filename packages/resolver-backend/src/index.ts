@@ -13,17 +13,19 @@ import { fromHex, toHex } from "@mysten/sui/utils";
 import { add0x } from "@1inch/byte-utils";
 import { bcs } from "@mysten/sui/bcs";
 import { Jsonify } from "type-fest"
+const SUI_SCAN_TX = (tx: string) => "https://suiscan.xyz/testnet/tx/" + tx
+const TENDER_TX = (tx: string) => "https://dashboard.tenderly.co/0xnullifier/project/testnet/87c016f5-3cb0-4a34-bf2f-6bfe8c1b02d7/tx" + tx
+
 
 const keypair = Ed25519Keypair.fromSecretKey(process.env.SUI_PRIVATE_KEY!);
 if (keypair.getPublicKey().toSuiAddress() !== "0x56a8c03c42263d494357a1ecdb97bc885b638b5896e334ed0caaf0335013578d") {
     throw new Error("Invalid SUI_PRIVATE_PHASE, please check the .env file");
 }
-const provider = new JsonRpcProvider("https://virtual.mainnet.eu.rpc.tenderly.co/5a73a2c7-48c3-458f-8f85-63456e9791bf");
+const provider = new JsonRpcProvider("https://virtual.mainnet.eu.rpc.tenderly.co/702101b0-dd4e-4666-b035-a44ec54ea1e9");
 const suiClient = new SuiClient({ url: getFullnodeUrl("testnet") })
 const wallet = new Wallet(process.env.RESOLVER_PRIVATE_KEY!, provider);
 const resolverContract = new Interface(Resolver.abi)
-const resolverContractAddress = "0xD0725945859175dabd070855bC3F1c37a3aF605F"
-console.log(ESCROW_FACTORY)
+const resolverContractAddress = "0xb53249FEBB6562Abf19BD728d6775c09d2ae0438"
 const escrowDstContract = new Interface(EscrowDst.abi)
 const escrowSrcContract = new Interface(EscrowSrc.abi)
 const escrowFactory = new Interface(IEscrowFactory.abi)
@@ -58,7 +60,9 @@ export enum MessageType {
     NEW_ORDER = "NEW_ORDER",
     FILLED_ORDER = "FILLED_ORDER",
     DEPLOYED_DST_ESCROW = "DEPLOYED_DST_ESCROW",
-    ORDER_SECRET_REVEALED = "ORDER_SECRET_REVEALED"
+    ORDER_SECRET_REVEALED = "ORDER_SECRET_REVEALED",
+    DST_ESCROW_WITHDRAWN = "DST_ESCROW_WITHDRAWN",
+    SRC_ESCROW_WITHDRAWN = "SRC_ESCROW_WITHDRAWN"
 }
 
 
@@ -87,7 +91,8 @@ const myOrders: string[] = [];
 const metadataToCoinSymbolMap: {
     [address: string]: string
 } = {
-    "0x587c29de216efd4219573e08a1f6964d4fa7cb714518c2c8a0f29abfa264327d": "0x2::sui::SUI"
+    "0x587c29de216efd4219573e08a1f6964d4fa7cb714518c2c8a0f29abfa264327d": "0x2::sui::SUI",
+    "0x5a2d9b8a2cbea39a2ce6186a31031496dd02b3b3eef59b7962bd3e2f6ddd988f": "0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC",
 }
 
 
@@ -115,6 +120,15 @@ ws.on("message", async (data) => {
                     }
                     const createdObjects = tx.objectChanges.filter(changes => changes.type === "created")
                     const srcEscrowObjectId = createdObjects.find((object) => object.objectType.includes("FusionPlusSrcEscrow"))?.objectId
+
+                    console.log(
+                        `🚀 Src escrow  created on SUI!
+                        🔑 Order Quote ID: ${order.quoteId}
+                        Transation Digest: ${SUI_SCAN_TX(tx.digest)}
+                        📦 Src Escrow Object ID: ${srcEscrowObjectId}
+                        🌐 Src Chain ID: ${order.srcChainId}
+                        `
+                    )
                     if (!srcEscrowObjectId) {
                         console.error("no object id founds", tx)
                         return;
@@ -129,8 +143,7 @@ ws.on("message", async (data) => {
                         },
                         immutables_id: string
                     };
-                    console.log("dstImmutables", dstImmutables)
-                    ws.send(JSON.stringify({ type: MessageType.FILLED_ORDER, qouteId: order.quoteId, dstImmutables, srcEscrowObjectId }))
+                    ws.send(JSON.stringify({ type: MessageType.FILLED_ORDER, qouteId: order.quoteId, dstImmutables, srcEscrowObjectId, txHash: tx.digest }));
 
                     const immutablesId = dstImmutables.immutables_id;
                     const immutablesObject = await suiClient.getObject({
@@ -195,9 +208,11 @@ ws.on("message", async (data) => {
                             type: MessageType.DEPLOYED_DST_ESCROW,
                             qouteId: order.quoteId,
                             dstImmutables: dstImmutablesEvm.build(),
+                            txHash: res.hash,
                         }));
                         myOrders.push(order.quoteId)
                         console.log(`🚀 Dst escrow deployed on EVM
+                        Transaction Hash: ${TENDER_TX(res.hash)}
                         🔑 Order Quote ID: ${order.quoteId}
                         📦 Dst Immutables Object ID: ${immutablesId}
                         🌐 Src Chain ID: ${order.srcChainId}
@@ -240,7 +255,6 @@ ws.on("message", async (data) => {
                         trait,
                         args
                     ])
-                    console.log("data", data)
                     await new Promise(resolve => setTimeout(resolve, 14000));
                     let srcEscrow = await wallet.sendTransaction({
                         to: resolverContractAddress,
@@ -277,6 +291,7 @@ ws.on("message", async (data) => {
                         qouteId: order.quoteId,
                         srcImmutables: srcImmutables.build(),
                         srcChainId: order.srcChainId,
+                        txHash: receipt.hash
                     }))
 
                     console.log(`🚀 Src escrow deployed on EVM! 
@@ -285,11 +300,11 @@ ws.on("message", async (data) => {
                     📦 Taker : ${srcImmutables.taker}
                     🌐 Src Chain ID: ${order.srcChainId}
                     👤 Maker: ${orderEvm.maker}
+                    📝 Transaction Hash: ${TENDER_TX(srcEscrow.hash)}
                         `)
                     myOrders.push(order.quoteId)
 
 
-                    console.log(keypair.getPublicKey().toSuiAddress())
                     let dstImmutables = srcImmutables.withComplement(
                         DstImmutablesComplement.new({
                             amount: takingAmount,
@@ -313,6 +328,7 @@ ws.on("message", async (data) => {
                         return;
                     }
                     console.log(`🚀 Dst escrow deployed on Sui!
+                    📝 Transaction Hash: ${SUI_SCAN_TX(result.digest)}
                     🔑 Order Quote ID: ${order.quoteId}
                     📦 Dst Escrow Object ID: ${dstEscrowObjectId}
                     🗂️ Immutables Object ID: ${srcDstImmutables}
@@ -331,6 +347,7 @@ ws.on("message", async (data) => {
                         qouteId: order.quoteId,
                         dstEscrowObjectId,
                         immutablesId: srcDstImmutables,
+                        txHash: result.digest
                     }))
                 } else {
                     console.log("Order is not implemented yet");
@@ -380,11 +397,6 @@ ws.on("message", async (data) => {
 
                     const dstImmutables = Immutables.fromJSON(typedOrder.dstImmutables);
                     console.log("dstEscrowAddress", dstEscrowAddress)
-                    console.log("data", resolverContract.encodeFunctionData('withdraw', [
-                        dstEscrowAddress.toString(),
-                        add0x(secret),
-                        dstImmutables.build(),
-                    ]))
                     const dstWithdraw = await wallet.sendTransaction({
                         to: dstEscrowAddress.toString(),
                         data: escrowDstContract.encodeFunctionData('withdraw', [
@@ -399,7 +411,11 @@ ws.on("message", async (data) => {
                         console.error("Transaction failed:", dstWithdraw);
                         return;
                     }
-                    console.log('dst escrow withdrawn', receipt.hash);
+                    ws.send(JSON.stringify({
+                        type: MessageType.DST_ESCROW_WITHDRAWN,
+                        qouteId: typedOrder.innerOrder.quoteId,
+                        txhash: receipt.hash,
+                    }))
 
                     const srcWithdraw = await MoveVMSrcEscrowPackage.DEFAULT.withdrawTo(
                         srcEscrowObjectId,
@@ -408,8 +424,12 @@ ws.on("message", async (data) => {
                         keypair,
                         fromHex(add0x(secret))
                     )
-
-                    console.log('src escrow withdrawn', srcWithdraw.digest);
+                    ws.send(JSON.stringify({
+                        type: MessageType.SRC_ESCROW_WITHDRAWN,
+                        qouteId: typedOrder.innerOrder.quoteId,
+                        txhash: srcWithdraw.digest,
+                    }))
+                    console.log('src escrow withdrawn', SUI_SCAN_TX(srcWithdraw.digest));
 
                 } else if (isEvm(order.innerOrder.srcChainId)) {
                     const evmCrosschainOrderMap = order as EvmOrderStore;
@@ -436,8 +456,12 @@ ws.on("message", async (data) => {
                         keypair,
                         metadataToCoinSymbolMap[add0x(BigInt(orderEvm.takerAsset.toString()).toString(16))]!
                     )
-
-                    console.log('dst escrow withdrawn', res.digest);
+                    ws.send(JSON.stringify({
+                        type: MessageType.DST_ESCROW_WITHDRAWN,
+                        qouteId: evmCrosschainOrderMap.innerOrder.quoteId,
+                        txhash: res.digest,
+                    }))
+                    console.log('dst escrow withdrawn', SUI_SCAN_TX(res.digest));
 
                     const srcImplAddress = await provider.call({
                         ///@ts-ignore
@@ -468,8 +492,13 @@ ws.on("message", async (data) => {
                         console.error("Transaction failed:", srcWithdraw);
                         return;
                     }
-                    console.log('src escrow withdrawn', receipt.hash);
+                    console.log('src escrow withdrawn', TENDER_TX(receipt.hash));
 
+                    ws.send(JSON.stringify({
+                        type: MessageType.SRC_ESCROW_WITHDRAWN,
+                        qouteId: evmCrosschainOrderMap.innerOrder.quoteId,
+                        txhash: receipt.hash,
+                    }))
                 }
             }
             break;

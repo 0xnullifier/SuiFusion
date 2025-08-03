@@ -1,14 +1,19 @@
 import { QuoterResponse, QuoterRequestParams, NetworkEnum, SupportedChain, PresetEnum, ESCROW_FACTORY } from "@1inch/cross-chain-sdk"
 import express from "express"
 import { v4 as uuidv4 } from 'uuid';
-
+import cors from "cors"
 const app = express()
+
+app.use(cors({
+    origin: "*",
+}))
 const port = 20001
 
 const metadataToCoinSymbolMap: {
     [address: string]: string
 } = {
-    "0x587c29de216efd4219573e08a1f6964d4fa7cb714518c2c8a0f29abfa264327d": "SUI"
+    "0x587c29de216efd4219573e08a1f6964d4fa7cb714518c2c8a0f29abfa264327d": "SUI",
+    "0x5a2d9b8a2cbea39a2ce6186a31031496dd02b3b3eef59b7962bd3e2f6ddd988f": "USDC",
 }
 
 export const MOBULA_API_BATCH_DATA = async (chain: string, address?: string, symbol?: string,) => {
@@ -230,7 +235,7 @@ app.get("/quoter/v1.1/quote/receive", async (req, res) => {
         dstSafetyDeposit: (BigInt(Math.trunc(0.001 * Math.pow(10, Number(dstTokenDecimals)))).toString()),
         autoK: 0,
         whitelist: [
-            "0xD0725945859175dabd070855bC3F1c37a3aF605F"
+            "0xb53249FEBB6562Abf19BD728d6775c09d2ae0438"
         ],
     }
     console.log("Response:", response)
