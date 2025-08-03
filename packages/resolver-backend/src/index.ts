@@ -165,14 +165,18 @@ ws.on("message", async (data) => {
                             })
                         )
                         console.log(dstImmutables)
-
+                        console.log(dstImmutablesEvm.timeLocks.toDstTimeLocks().privateCancellation > srcImmutables.timeLocks.toSrcTimeLocks().privateCancellation)
+                        console.log(resolverContract.encodeFunctionData('deployDst', [
+                            dstImmutablesEvm.build(),
+                            srcImmutables.timeLocks.toSrcTimeLocks().privateCancellation
+                        ]))
                         const res = await wallet.sendTransaction({
                             to: resolverContractAddress,
                             data: resolverContract.encodeFunctionData('deployDst', [
                                 dstImmutablesEvm.build(),
-                                srcImmutables.timeLocks.toSrcTimeLocks().privateCancellation
+                                dstImmutablesEvm.timeLocks.toDstTimeLocks().privateCancellation * 2n,
                             ]),
-                            value: order.order.dstSafetyDeposit,
+                            value: dstImmutablesEvm.safetyDeposit,
                             gasLimit: 10000000
                         })
 
@@ -201,9 +205,7 @@ ws.on("message", async (data) => {
                         👤 Maker: ${order.order.maker}
                         🎯 Receiver: ${order.order.receiver}
                         💰 Amount: ${order.order.amount.toString()}
-                        🪙 Taker Asset: ${order.order.takerAsset.toString()}
                         ⏰ Timestamp: ${new Date().toISOString()}
-
                             !`);
                     } else { console.error("somethign went wrong"); return; }
 

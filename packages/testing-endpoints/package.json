@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc index.ts --outDir dist",
-    "start": "node --env-file=.env dist/index.js"
+    "build": "tsc -b",
+    "start": "tsc -b && node --env-file=.env dist/index.js"
   },
   "dependencies": {
     "@1inch/cross-chain-sdk": "workspace:*",
